@@ -9,6 +9,6 @@ if [ -z "$XEPHYR" ]; then
   exit 1
 fi
 
-xinit ./xinitrc -- "$XEPHYR" :0 -ac -screen 800x600 -host-cursor
+xinit ./xinitrc -- "$XEPHYR" :100 -ac -screen 800x600 -host-cursor
 
 
