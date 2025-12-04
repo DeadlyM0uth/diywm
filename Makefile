@@ -4,8 +4,8 @@ diywm: main.go
 	go build -o diywm main.go
 
 run: diywm
-	echo "exec diywm" > xinitrc
+	echo "exec ./diywm" > xinitrc
 	./run.sh
 
 clean:
-	rm diywm xinitrc
+	rm ./diywm xinitrc
