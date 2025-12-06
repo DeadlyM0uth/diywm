@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os/exec"
 
 	"github.com/jezek/xgb"
 	"github.com/jezek/xgb/xproto"
@@ -63,10 +64,11 @@ func main() {
 	}
 
 	for {
-
+		
+		// apparently X errors can be ignored????
 		ev, xerr := conn.WaitForEvent()
 		if ev == nil && xerr == nil {
-			log.Fatal("Event and error are nil. Exxiting...")
+			log.Fatal("Event and error are nil. Exiting...")
 		}
 
 		if ev != nil {
@@ -75,12 +77,50 @@ func main() {
 		if xerr != nil {
 			log.Printf("Error: %s\n", xerr)
 		}
-
-		switch ev.(type) {
+		
+		
+		switch ev := ev.(type) {
 		case xproto.KeyPressEvent:
-			kpe := ev.(xproto.KeyPressEvent)
-			log.Printf("Key pressed: %d\n", kpe.Detail)
-		}
+			//TODO make separate function to handle key presses
+			log.Printf("Key pressed: %d\n", ev.Detail)
+			// 28 = t
+			if ev.Detail == 28 {
+				cmd := exec.Command("urxvt")
+				cmd.Start()
+			}
 
+		case xproto.MapRequestEvent:
+			log.Printf("Window wants to be shown: %s", ev.String())
+
+			cookie := xproto.GetWindowAttributes(
+				conn,
+				ev.Window,
+			)
+
+			if winattrib, err := cookie.Reply(); err != nil || !winattrib.OverrideRedirect {
+				xproto.MapWindowChecked(conn, ev.Window)
+				//TODO make separate function to handle window mapping
+				err := xproto.ConfigureWindowChecked(
+					conn,
+					ev.Window,
+					xproto.ConfigWindowX |
+					xproto.ConfigWindowY |
+					xproto.ConfigWindowWidth |
+					xproto.ConfigWindowHeight |
+					xproto.ConfigWindowBorderWidth,
+					[]uint32{
+						0,
+						0,
+						512,
+						512,
+						20,
+					},
+				).Check()
+				if err != nil {
+					log.Fatal("Error: %w", err)
+				}
+			}
+		}
+		
 	}
 }
