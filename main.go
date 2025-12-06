@@ -33,6 +33,8 @@ func main() {
 		},
 	}
 
+	_ = config
+
 	conn, err := xgb.NewConn()
 	if err != nil {
 		log.Fatalf("Error establishing connection to X server: %s", err)
@@ -51,7 +53,8 @@ func main() {
 		root,
 		xproto.CwEventMask,
 		[]uint32{
-			xproto.EventMaskStructureNotify |
+			xproto.EventMaskKeyPress |
+				xproto.EventMaskStructureNotify |
 				xproto.EventMaskSubstructureRedirect,
 		},
 	)
@@ -59,9 +62,25 @@ func main() {
 		log.Fatal("Is another winodow manager is running?")
 	}
 
-	_ = config
-
 	for {
+
+		ev, xerr := conn.WaitForEvent()
+		if ev == nil && xerr == nil {
+			log.Fatal("Event and error are nil. Exxiting...")
+		}
+
+		if ev != nil {
+			log.Printf("Event %s\n", ev)
+		}
+		if xerr != nil {
+			log.Printf("Error: %s\n", xerr)
+		}
+
+		switch ev.(type) {
+		case xproto.KeyPressEvent:
+			kpe := ev.(xproto.KeyPressEvent)
+			log.Printf("Key pressed: %d\n", kpe.Detail)
+		}
 
 	}
 }
